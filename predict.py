@@ -3,7 +3,7 @@ import os
 def load_thetas():
     try:
         with open("thetas.txt", "r") as file:
-            line = file.readline()
+            line = file.readlines()
             theta0 = float(line[0].strip())
             theta1 = float(line[1].strip())
             return theta0, theta1
@@ -15,7 +15,7 @@ def load_thetas():
 def estimate_price(mileage, theta0, theta1):
     return theta0 + theta1 * mileage
 
-def git_mileage_from_user():
+def get_mileage_from_user():
     while True:
         try:
             mileage_input = input("Enter the mileage of the car: ")
@@ -40,13 +40,13 @@ def main():
 
     while True:
         try:
-            mileage = git_mileage_from_user()
+            mileage = get_mileage_from_user()
             price = estimate_price(mileage, theta0, theta1)
             print(f"Estimated price for a car with {mileage:.0f} mileage is: ${price:.2f}")
             print()
 
             continue_choice = input("Would you like to estimate another price? (yes/no): ").strip().lower()
-            if continue_choice not in ['yes', 'y']:
+            if continue_choice not in ['yes', 'y', 'ye']:
                 break
 
         except KeyboardInterrupt:

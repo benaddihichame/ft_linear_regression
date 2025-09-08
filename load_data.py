@@ -8,10 +8,10 @@ def load_data(file_path):
 			reader = csv.reader(csvfile)
 			next(reader)  # Skip header row
 			for row in reader:
-				km = float(row[0])
-				prices = float(row[1])
-				km.append(km)
-				prices.append(prices)
+				km_value = float(row[0])
+				prices_value = float(row[1])
+				km.append(km_value)
+				prices.append(prices_value)
 			print(f"Loaded {len(km)} entries from {file_path}")
 		return km, prices
 	except FileNotFoundError:
