@@ -77,3 +77,60 @@ def create_visualization():
 
     plt.plot(line_km, line_prices, color = 'red', linewidth=2, label=f'Linear Regression\n(y = {theta0:.0f} + {theta1:.4f}x)')
 
+
+    plt.xlabel("Kilometrage (km)", fontsize=12, fontweight='bold')
+    plt.ylabel("Price (€)", fontsize=12, fontweight='bold')
+    plt.title("Price prediction of the car compared with de Mileage",fontsize=14, fontweight='bold', pad=20)
+
+    plt.grid(True, alpha = 0.3, linestyle='--')
+    plt.legend(fontsize=11,loc='upper right')
+
+    textstr = f'''Statistiques du modèle:
+    • Nombre d'échantillons: {len(mileages)}
+    • Coefficient R²: {r_squared:.4f}
+    • Intercept (θ₀): {theta0:.0f} €
+    • Pente (θ₁): {theta1:.6f} €/km'''
+
+    props = dict(boxstyle='round', facecolor='wheat', alpha=0.8)
+    plt.text(0.02, 0.98,textstr, transform=plt.gca().transAxes, fontsize=10, verticalalignment='top', bbox=props)
+
+    plt.tight_layout()
+    print()
+    print("=== Exemples de prédictions ===")
+    test_kms = [0, 50000, 100000, 150000, 200000]
+    for km in test_kms:
+        predicted = estimate_price(km, theta0, theta1)
+        print(f"{km:6d} km → {predicted:7.0f} €")
+    
+    # 7. Affiche le graphique
+    print()
+    print("Affichage du graphique... (fermez la fenêtre pour continuer)")
+    plt.show()
+    
+    # 8. Option pour sauvegarder
+    save_choice = input("Voulez-vous sauvegarder le graphique ? (o/n): ").lower()
+    if save_choice in ['o', 'oui', 'y', 'yes']:
+        filename = "linear_regression_visualization.png"
+        plt.savefig(filename, dpi=300, bbox_inches='tight')
+        print(f"Graphique sauvegardé dans {filename}")
+
+def main():
+    """
+    Fonction principale
+    """
+    print("🎨 === BONUS - Visualisation de la régression linéaire ===")
+    print()
+    
+    try:
+        create_visualization()
+    except ImportError:
+        print("❌ Erreur: matplotlib n'est pas installé.")
+        print("Installez-le avec: pip install matplotlib")
+    except Exception as e:
+        print(f"❌ Erreur inattendue: {e}")
+    
+    print()
+    print("✨ Visualisation terminée !")
+
+if __name__ == "__main__":
+    main()
