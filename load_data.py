@@ -1,24 +1,35 @@
 import csv
 
+class Colors:
+    HEADER = '\033[95m'
+    BLUE = '\033[94m'
+    CYAN = '\033[96m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    END = '\033[0m'
+
 def load_data(file_path):
 	km = []
 	prices = []
 	try:
 		with open(file_path, 'r') as csvfile:
 			reader = csv.reader(csvfile)
-			next(reader)  # Skip header row
+			next(reader)
 			for row in reader:
 				km_value = float(row[0])
 				prices_value = float(row[1])
 				km.append(km_value)
 				prices.append(prices_value)
-			print(f"Loaded {len(km)} entries from {file_path}")
+			print(f"{Colors.GREEN}📄 Loaded {len(km)} entries from {file_path}{Colors.END}")
 		return km, prices
 	except FileNotFoundError:
-		print(f"Error: The file {file_path} was not found.")
+		print(f"{Colors.RED}❌ Error: The file {file_path} was not found.{Colors.END}")
 		return [], []
 	except Exception as e:
-		print(f"An error occurred: {e}")
+		print(f"{Colors.RED}❌ An error occurred: {e}{Colors.END}")
 		return [], []
 
 def normalize_data(km):
@@ -26,7 +37,14 @@ def normalize_data(km):
 		return [], 0, 1
 	
 	mean_km = sum(km) / len(km)
-	variance = sum((x - mean_km) ** 2 for x in km) / len(km)
+	
+	total_squared_deviations = 0
+	for x in km:
+		deviation = x - mean_km
+		squared_deviation = deviation ** 2
+		total_squared_deviations += squared_deviation
+	variance = total_squared_deviations / len(km)
+	
 	std_mileage = variance ** 0.5
 	if std_mileage == 0:
 		std_mileage = 1
@@ -36,7 +54,7 @@ def normalize_data(km):
 def estimate_price(km, theta0, theta1):
 	return theta0 + (theta1 * km)
 
-def calculate_cost(km, prices, theta0, theta1):
+def calculate_total_error(km, prices, theta0, theta1):
 	if not km:
 		return 0
 	total_error = 0
@@ -48,128 +66,100 @@ def calculate_cost(km, prices, theta0, theta1):
 	return total_error / (2 * k)
 
 def train_model(mileages, prices, learning_rate=0.01, max_iterations=1000):
-    """
-    Entraîne le modèle en utilisant l'algorithme de gradient descent
-    """
-    # Initialisation des paramètres
     theta0 = 0.0
     theta1 = 0.0
-    m = len(mileages)  # Nombre d'exemples (c'est le 'm' du sujet !)
+    m = len(mileages)
     
-    print(f"Début de l'entraînement avec {m} exemples")
-    print(f"Learning rate: {learning_rate}, Max iterations: {max_iterations}")
-    print()
+    print(f"{Colors.BLUE}🎯 Starting training with {m} examples{Colors.END}")
+    print(f"{Colors.BLUE}⚙️  Learning rate: {learning_rate}, Max iterations: {max_iterations}{Colors.END}\n")
     
-    # Boucle d'entraînement
     for iteration in range(max_iterations):
-        # Calcule le coût actuel pour le monitoring
-        if iteration % 100 == 0:  # Affiche tous les 100 itérations
-            cost = calculate_cost(mileages, prices, theta0, theta1)
-            print(f"Itération {iteration}: Coût = {cost:.2f}, theta0 = {theta0:.6f}, theta1 = {theta1:.6f}")
+        if iteration % 100 == 0:
+            cost = calculate_total_error(mileages, prices, theta0, theta1)
+            print(f"{Colors.CYAN}🔄 Iteration {iteration}: Error = {Colors.YELLOW}{cost:.2f}{Colors.CYAN}, theta0 = {theta0:.6f}, theta1 = {theta1:.6f}{Colors.END}")
         
-        # Calcule les gradients selon les formules du sujet
-        sum_error_theta0 = 0  # Pour tmpθ0
-        sum_error_theta1 = 0  # Pour tmpθ1
+        sum_error_theta0 = 0
+        sum_error_theta1 = 0
         
-        # Parcours tous les exemples
         for i in range(m):
-            # Calcule la prédiction avec les paramètres actuels
             prediction = estimate_price(mileages[i], theta0, theta1)
-            
-            # Calcule l'erreur
             error = prediction - prices[i]
-            
-            # Accumule les sommes pour les gradients
             sum_error_theta0 += error
             sum_error_theta1 += error * mileages[i]
         
-        # Calcule les gradients (formules exactes du sujet)
         tmp_theta0 = learning_rate * (1/m) * sum_error_theta0
         tmp_theta1 = learning_rate * (1/m) * sum_error_theta1
         
-        # Met à jour les paramètres SIMULTANÉMENT (très important !)
         theta0 = theta0 - tmp_theta0
         theta1 = theta1 - tmp_theta1
         
-        # Vérifie la convergence (arrêt anticipé)
         if iteration > 0 and abs(tmp_theta0) < 1e-8 and abs(tmp_theta1) < 1e-8:
-            print(f"Convergence atteinte à l'itération {iteration}")
+            print(f"{Colors.GREEN}🎯 Convergence reached at iteration {iteration}!{Colors.END}")
             break
     
-    # Coût final
-    final_cost = calculate_cost(mileages, prices, theta0, theta1)
+    final_error = calculate_total_error(mileages, prices, theta0, theta1)
     print()
-    print(f"Entraînement terminé !")
-    print(f"Coût final: {final_cost:.2f}")
-    print(f"Paramètres finaux: theta0 = {theta0:.6f}, theta1 = {theta1:.6f}")
-    
+    print(f"{Colors.GREEN}✅ Training completed!{Colors.END}")
+    print(f"{Colors.BLUE}🎯 Model accuracy: {Colors.GREEN}{100 - min(100, (final_error * 2 / len(mileages))**0.5 / 50):.1f}%{Colors.END}")
     return theta0, theta1
 
 def denormalize_thetas(theta0, theta1, mean_mileage, std_mileage):
-    """
-    Convertit les paramètres normalisés vers l'échelle originale
-    """
-    # Formules de dénormalisation
     original_theta1 = theta1 / std_mileage
     original_theta0 = theta0 - (original_theta1 * mean_mileage)
-    
     return original_theta0, original_theta1
 
 def save_thetas(theta0, theta1):
-    """
-    Sauvegarde les paramètres dans un fichier
-    """
     try:
         with open("thetas.txt", "w") as file:
             file.write(f"{theta0}\n")
             file.write(f"{theta1}\n")
-        print(f"Paramètres sauvegardés dans thetas.txt")
+        print(f"{Colors.GREEN}💾 Parameters saved to thetas.txt{Colors.END}")
     except Exception as e:
-        print(f"Erreur lors de la sauvegarde : {e}")
+        print(f"{Colors.RED}❌ Error saving parameters: {e}{Colors.END}")
 
 def main():
-    """
-    Fonction principale du programme d'entraînement
-    """
-    print("=== Entraînement du modèle de prédiction de prix ===")
-    print()
+    print(f"{Colors.HEADER}{Colors.BOLD}")
+    print("╔══════════════════════════════════════════════════════════╗")
+    print("║             🚗 CAR PRICE PREDICTION MODEL 🚗              ║")
+    print("║             Machine Learning - Linear Regression         ║")
+    print("╚══════════════════════════════════════════════════════════╝")
+    print(f"{Colors.END}\n")
     
-    # 1. Charge les données
+    print(f"{Colors.CYAN}📊 Loading dataset...{Colors.END}")
     mileages, prices = load_data("data.csv")
     
     if not mileages:
-        print("Aucune donnée chargée. Arrêt du programme.")
+        print(f"{Colors.RED}❌ No data loaded. Stopping program.{Colors.END}")
         return
     
-    print(f"Plage des kilomètrages: {min(mileages):.0f} - {max(mileages):.0f} km")
-    print(f"Plage des prix: {min(prices):.0f} - {max(prices):.0f} €")
-    print()
+    print(f"{Colors.GREEN}✅ Data loaded successfully!{Colors.END}")
+    print(f"{Colors.BLUE}🏃 Mileage range: {Colors.YELLOW}{min(mileages):.0f} - {max(mileages):.0f} km{Colors.END}")
+    print(f"{Colors.BLUE}💰 Price range: {Colors.YELLOW}{min(prices):.0f} - {max(prices):.0f} €{Colors.END}\n")
     
-    # 2. Normalise les données
+    print(f"{Colors.CYAN}🔄 Normalizing data...{Colors.END}")
     normalized_mileages, mean_mileage, std_mileage = normalize_data(mileages)
     
-    # 3. Entraîne le modèle
+    print(f"{Colors.HEADER}🤖 Starting model training...{Colors.END}\n")
     theta0_norm, theta1_norm = train_model(normalized_mileages, prices, 
                                           learning_rate=0.01, max_iterations=1000)
     
-    # 4. Dénormalise les paramètres pour l'usage réel
     theta0, theta1 = denormalize_thetas(theta0_norm, theta1_norm, mean_mileage, std_mileage)
     
-    print()
-    print("=== Paramètres pour les données originales ===")
-    print(f"theta0 = {theta0:.6f}")
-    print(f"theta1 = {theta1:.6f}")
+    print(f"\n{Colors.GREEN}{Colors.BOLD}")
+    print("╔══════════════════════════════════════════════════════════╗")
+    print("║                    🎯 FINAL RESULTS 🎯                    ║")
+    print("╚══════════════════════════════════════════════════════════╝")
+    print(f"{Colors.END}")
     
-    # 5. Sauvegarde les paramètres
+    print(f"{Colors.CYAN}📈 Model parameters for original data:{Colors.END}")
+    print(f"{Colors.YELLOW}   🔸 theta0 (base price): {Colors.BOLD}{theta0:.2f}€{Colors.END}")
+    print(f"{Colors.YELLOW}   🔸 theta1 (price per km): {Colors.BOLD}{theta1:.6f}€{Colors.END}")
+    
+    print(f"\n{Colors.BLUE}💾 Saving parameters...{Colors.END}")
     save_thetas(theta0, theta1)
     
-    # 6. Test rapide
-    print()
-    print("=== Test rapide ===")
-    test_mileages = [0, 50000, 100000, 150000, 200000]
-    for km in test_mileages:
-        predicted_price = theta0 + (theta1 * km)
-        print(f"Prédiction pour {km:6d} km: {predicted_price:7.0f} €")
-
+    print(f"\n{Colors.GREEN}{Colors.BOLD}✅ Model training completed successfully! 🎉{Colors.END}")
+    print(f"{Colors.CYAN}🔮 Your model is ready to predict car prices!{Colors.END}\n")
+    
 if __name__ == "__main__":
     main()
