@@ -22,7 +22,6 @@ ft_linear_regression/
 ├── data.csv           # Training dataset (mileage, price)
 ├── load_data.py       # Model training script
 ├── predict.py         # Price prediction script
-├── bonus_graph.py     # Data visualization (bonus)
 ├── thetas.txt         # Trained model parameters
 └── README.md          # Documentation
 ```
@@ -51,18 +50,6 @@ This will:
 - Load the trained model parameters
 - Provide an interactive interface to predict car prices
 - Handle input validation
-
-### Data Visualization (Bonus)
-
-```bash
-python3 bonus_graph.py
-```
-
-This will:
-- Generate scatter plot of the original data points
-- Display the trained linear regression line
-- Show the relationship between mileage and price visually
-- Requires matplotlib for plotting
 
 ## Algorithm
 
@@ -120,8 +107,3 @@ Where:
 - Python 3.8+
 - No external ML libraries required for core functionality
 - Optional: matplotlib (for bonus data visualization)
-
-```bash
-# For bonus graph visualization
-pip install matplotlib
-```
