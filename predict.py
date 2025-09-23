@@ -1,5 +1,3 @@
-import os
-
 class Colors:
     HEADER = '\033[95m'
     BLUE = '\033[94m'
