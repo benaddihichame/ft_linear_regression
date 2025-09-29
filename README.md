@@ -106,4 +106,3 @@ Where:
 
 - Python 3.8+
 - No external ML libraries required for core functionality
-- Optional: matplotlib (for bonus data visualization)
